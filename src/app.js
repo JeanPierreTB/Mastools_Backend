@@ -71,7 +71,76 @@ app.post('/crear-producto',async(req,res)=>{
 })
 
 
-app.get('/obtener-productos')
+app.get('/obtener-productos',async (req,res)=>{
+  const productos=await Producto.findAll({})
+  if(productos.length===0){
+    return res.status(404).json({res:false,mensaje:"Nos se encontraron productos"})
+  }
+
+  res.status(200).json({res:true,mensaje:"Productos encontrados",productos,productos})
+})
+
+
+app.put('/actualizar-proveedor',async(req,res)=>{
+  const { id,nombre, apellido, correo, contrasena, dni } = req.body;
+
+  if (!id || !nombre || !apellido || !correo || !contrasena || !dni) {
+    return res.status(400).json({ res: false, mensaje: "Llena todos los campos" });
+  }
+
+  const [proveedor]=await Proveedor.update({nombre,apellido,correo,contrasena,dni},{where:{id}})
+
+  if(proveedor===0){
+    return res.status(400).json({res:false,mensaje:"Ningun proveedor encontrado"})
+
+  }
+
+  return res.status(200).json({res:true,mensaje:"Se actualizo el proveedor"})
+
+})
+
+
+app.put('/actualizar-producto',async (req,res)=>{
+  const {id,descripcion,cantidad,imagen,precio,tipo}=req.body;
+
+  if(!id || ! descripcion || !cantidad || !imagen || !precio || !tipo){
+    return res.status(400).json({res:false,mensaje:"Llena todos los campos"})
+
+  }
+
+  const [producto]=await Producto.update(
+    {descripcion,cantidad,imagen,precio,tipo},
+    {where:{id}}
+  )
+
+  if(producto===0){
+    return res.status(400).json({res:false,mensaje:"Ningun producto encontrado"})
+  }
+
+  return res.status(200).json({res:true,mensaje:"Se actualizo el producto"})
+
+
+})
+
+app.delete('/borrar-producto',async(req,res)=>{
+  const {id}=req.body;
+
+  if(!id){
+    return res.status(400).json({res:false,mensaje:"Llena todos los campos"})
+
+  }  
+  const producto=await Producto.destroy({where:{id}})
+
+  if(producto===0){
+    return res.status(400).json({res:false,mensaje:"Ningun producto encontrado"})
+  }
+
+
+  return res.status(200).json({res:true,mensaje:"Se borro el producto",producto:producto})
+
+
+
+})
 
 app.listen(PORT, () => {
     console.log(`Servidor escuchando en http://localhost:${PORT}`);
