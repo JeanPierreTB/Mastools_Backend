@@ -14,7 +14,7 @@ export const Producto=sequelize.define("Producto",{
         type:DataTypes.INTEGER
     },
     imagen:{
-        type:DataTypes.STRING
+        type:DataTypes.TEXT
     },
     precio:{
         type:DataTypes.FLOAT
