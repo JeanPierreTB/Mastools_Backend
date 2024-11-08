@@ -1,5 +1,7 @@
 import { DataTypes } from "sequelize";
-import {sequelize} from "../database/database.js"
+import {sequelize} from "../database/database.js";
+import { Producto } from "./Producto.js";
+
 
 export const Proveedor=sequelize.define("Proveedor",{
     id:{
@@ -25,4 +27,14 @@ export const Proveedor=sequelize.define("Proveedor",{
     foto:{
         type:DataTypes.STRING
     }
+})
+
+
+
+Proveedor.hasMany(Producto,{
+    foreignKey:'proveedorID'
+})
+
+Producto.belongsTo(Proveedor,{
+    foreignKey:'proveedorID'
 })

@@ -57,22 +57,46 @@ app.post('/insertar-administrador',async(req,res)=>{
 
 
 app.post('/crear-producto',async(req,res)=>{
-  const{descripcion,cantidad,imagen,precio,tipo} =req.body
+  const{descripcion,cantidad,imagen,precio,tipo,proveedorID} =req.body
 
-  if(!descripcion || !cantidad || !imagen || !precio || !tipo){
+  if(!descripcion || !cantidad || !imagen || !precio || !tipo || !proveedorID){
     return res.status(400).json({res:false,mensaje:"Llena todos los campos"})
 
   }
 
-  const producto=await Producto.create({descripcion,cantidad,imagen,precio,tipo})
+  const proveedor=await Proveedor.findOne({where:{id:proveedorID}})
 
-  res.status(200).json({res:true,mensaje:"Producto creado",producto:Producto})
+
+  if(!proveedor){
+    return res.status(400).json({res:false,mensaje:"Proveedor no encontrado"})
+
+  }
+
+
+  const producto=await Producto.create({descripcion,cantidad,imagen,precio,tipo,proveedorID})
+
+  res.status(200).json({res:true,mensaje:"Producto creado",producto:producto})
 
 })
 
 
-app.get('/obtener-productos',async (req,res)=>{
-  const productos=await Producto.findAll({})
+app.get('/obtener-productos/:id',async (req,res)=>{
+
+  const {id}=req.params;
+
+  if(!id){
+    return res.status(400).json({res:false,mensaje:"Llena todos los campos"})
+
+  }
+
+  const proveedor=await Proveedor.findOne({where:{id}})
+
+  if(!proveedor){
+    return res.status(400).json({res:false,mensaje:"Proveedor no encontrado"})
+  }
+  const productos=await Producto.findAll({where:{proveedorID:id}})
+
+
   if(productos.length===0){
     return res.status(404).json({res:false,mensaje:"Nos se encontraron productos"})
   }
@@ -101,15 +125,23 @@ app.put('/actualizar-proveedor',async(req,res)=>{
 
 
 app.put('/actualizar-producto',async (req,res)=>{
-  const {id,descripcion,cantidad,imagen,precio,tipo}=req.body;
+  const {id,descripcion,cantidad,imagen,precio,tipo,proveedorID}=req.body;
 
-  if(!id || ! descripcion || !cantidad || !imagen || !precio || !tipo){
+  if(!id || ! descripcion || !cantidad || !imagen || !precio || !tipo || !proveedorID){
     return res.status(400).json({res:false,mensaje:"Llena todos los campos"})
 
   }
 
+  const proveedor=await Proveedor.findOne({where:{id:proveedorID}})
+
+  if(!proveedor){
+    return res.status(400).json({res:false,mensaje:"Proveedor no encontrado"})
+  }
+
+
+
   const [producto]=await Producto.update(
-    {descripcion,cantidad,imagen,precio,tipo},
+    {descripcion,cantidad,imagen,precio,tipo,proveedorID},
     {where:{id}}
   )
 
@@ -134,13 +166,57 @@ app.delete('/borrar-producto',async(req,res)=>{
   if(producto===0){
     return res.status(400).json({res:false,mensaje:"Ningun producto encontrado"})
   }
-
-
   return res.status(200).json({res:true,mensaje:"Se borro el producto",producto:producto})
-
-
-
 })
+
+
+
+app.post('/comprar-producto',async(req,res)=>{
+  const {id_producto,cantidad,precio,id_administrador}=req.body;
+
+  if(!id_producto || !id_administrador || !cantidad || !precio){
+    return res.status(400).json({res:false,mensaje:"Llena todos los campos"})
+
+  }
+
+
+
+  const total=cantidad*precio;
+
+  const producto=await Producto.update({cantidad:cantidad-1})
+
+  const administrador_producto=await Administrador_Producto({ProductoId:id_producto,AdministradorId:id_administrador,precio_total:total,estado:true})
+  
+
+  return res.status(200).json({res:true,mensaje:"Se compro producto",administrador_producto:administrador_producto})
+
+
+  
+})
+
+
+app.get('/productos-massolicitados/:proveedorID',async(req,res)=>{
+  const {proveedorID}=req.params;
+
+  const productos=await Producto.findAll({proveedorID})
+
+  console.log(productos)
+
+  if(productos.length===0){
+    return res.status(400).json({res:false,mensaje:"No hay productos"})
+
+  }
+
+
+
+
+
+  
+  
+})
+
+
+
 
 app.listen(PORT, () => {
     console.log(`Servidor escuchando en http://localhost:${PORT}`);
