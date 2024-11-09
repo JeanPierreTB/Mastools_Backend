@@ -4,6 +4,7 @@ import { Proveedor } from './models/Proveedor.js';
 import { Administrador } from './models/Administrador.js';
 import { Producto } from './models/Producto.js';
 import { Administrador_Producto } from './models/Administrador_Producto.js';
+import { Solicitud } from './models/Solicitud.js';
 
 
 
@@ -207,6 +208,54 @@ app.post('/comprar-producto',async(req,res)=>{
 })
 
 
+app.post('/realizar-solicitud',async(req,res)=>{
+  const {descripcion,fecha_solicitud,fecha_envio,imagen,AdministradorId,ProveedorId}=req.body;
+
+  if(!descripcion || !fecha_solicitud || !fecha_envio || !imagen || !AdministradorId || !ProveedorId){
+    return res.status(404).json({res:false,mensaje:"Llena todos los campos"})
+  }
+
+  const solicitud=await Solicitud.create({descripcion,fecha_solicitud,fecha_envio,imagen,AdministradorId,ProveedorId,atendido:false});
+
+  return res.status(200).json({res:true,mensaje:"Solicitud enviada",solicitud:solicitud})
+
+
+})
+
+
+app.get('/visualizar-solicitudes/:ProveedorId',async(req,res)=>{
+  const {ProveedorId}=req.params;
+
+  if(!ProveedorId){
+    return res.status(404).send({res:false,mensaje:"Llena los campos"})
+  }
+
+  const solicitud=await Solicitud.findAll({where:{ProveedorId,atendido:false}})
+
+  if(solicitud.length===0){
+    return res.status(404).send({res:false,mensaje:'No hay solicitudes'})
+  }
+
+  return res.status(200).send({res:true,mensaje:'Solicitudes',solicitud:solicitud})
+
+
+})
+
+
+app.put('/atender-solicitud',async(req,res)=>{
+  const{id}=req.body;
+
+  if(!id){
+    return res.status(404).json({res:false,mensaje:"Llena todos los campos"})
+  }
+
+  const solicitud=await Solicitud.update({atendido:true},{where:{id}});
+
+  return res.status(200).json({res:true,mensaje:"Solicitud atendida",solicitud:solicitud})
+
+})
+
+
 app.get('/productos-estadisticas/:proveedorID/:order', async (req, res) => {
   const { proveedorID, order } = req.params;
 
@@ -247,6 +296,9 @@ app.get('/productos-estadisticas/:proveedorID/:order', async (req, res) => {
 
   return res.send({ resultado: resultadoOrdenado });
 });
+
+
+
 
 
 
