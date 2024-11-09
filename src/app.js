@@ -172,20 +172,32 @@ app.delete('/borrar-producto',async(req,res)=>{
 
 
 app.post('/comprar-producto',async(req,res)=>{
-  const {id_producto,cantidad,precio,id_administrador}=req.body;
+  const {id_producto,id_administrador,cantidad}=req.body;
 
-  if(!id_producto || !id_administrador || !cantidad || !precio){
+  if(!id_producto || !id_administrador || !cantidad){
     return res.status(400).json({res:false,mensaje:"Llena todos los campos"})
 
   }
 
 
+  const producto=await Producto.findOne({where:{id:id_producto}})
 
-  const total=cantidad*precio;
+  if(!producto){
+    res.status(404).json({res:false,mensaje:"Producto no existe"})
+  }
 
-  const producto=await Producto.update({cantidad:cantidad-1})
+  const total=cantidad*producto.precio;
 
-  const administrador_producto=await Administrador_Producto({ProductoId:id_producto,AdministradorId:id_administrador,precio_total:total,estado:true})
+ 
+
+  const producto2 = await Producto.update(
+    { cantidad: producto.cantidad-cantidad },
+    { where: { id: id_producto } }
+  );
+
+
+
+  const administrador_producto=await Administrador_Producto.create({ProductoId:id_producto,AdministradorId:id_administrador,precio_total:total,cantidadcomprada:cantidad})
   
 
   return res.status(200).json({res:true,mensaje:"Se compro producto",administrador_producto:administrador_producto})
@@ -195,25 +207,51 @@ app.post('/comprar-producto',async(req,res)=>{
 })
 
 
-app.get('/productos-massolicitados/:proveedorID',async(req,res)=>{
-  const {proveedorID}=req.params;
+app.get('/productos-estadisticas/:proveedorID/:order', async (req, res) => {
+  const { proveedorID, order } = req.params;
 
-  const productos=await Producto.findAll({proveedorID})
+  const productos = await Producto.findAll({ where: { proveedorID } });
 
-  console.log(productos)
-
-  if(productos.length===0){
-    return res.status(400).json({res:false,mensaje:"No hay productos"})
-
+  if (productos.length === 0) {
+    return res.status(400).json({ res: false, mensaje: "No hay productos" });
   }
 
+  const ids = productos.map(producto => producto.id);
+
+  const resultado = await Administrador_Producto.findAll({
+    where: {
+      ProductoId: ids
+    }
+  });
+
+  const conteoProductos = {};
+  resultado.forEach(item => {
+    conteoProductos[item.ProductoId] = (conteoProductos[item.ProductoId] || 0) + 1;
+  });
+
+  const resultadoUnico = new Map();
+  resultado.forEach(item => {
+    if (!resultadoUnico.has(item.ProductoId)) {
+      resultadoUnico.set(item.ProductoId, item);
+    }
+  });
+
+  const resultadoOrdenado = Array.from(resultadoUnico.values()).sort((a, b) => {
+    if (order === '1') {
+      return conteoProductos[b.ProductoId] - conteoProductos[a.ProductoId];  
+    } else if (order === '0') {
+      return conteoProductos[a.ProductoId] - conteoProductos[b.ProductoId];  
+    }
+    return conteoProductos[b.ProductoId] - conteoProductos[a.ProductoId];
+  });
+
+  return res.send({ resultado: resultadoOrdenado });
+});
 
 
 
 
-  
-  
-})
+
 
 
 

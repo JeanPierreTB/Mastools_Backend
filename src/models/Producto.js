@@ -22,4 +22,6 @@ export const Producto=sequelize.define("Producto",{
     tipo:{
         type:DataTypes.STRING
     }
+},{
+    freezeTableName:true
 })

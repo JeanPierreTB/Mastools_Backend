@@ -27,6 +27,8 @@ export const Proveedor=sequelize.define("Proveedor",{
     foto:{
         type:DataTypes.STRING
     }
+},{
+    freezeTableName:true
 })
 
 

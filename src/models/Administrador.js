@@ -1,7 +1,5 @@
 import { DataTypes } from "sequelize";
 import {sequelize} from "../database/database.js"
-import { Producto } from "./Producto.js";
-import { Administrador_Producto } from "./Administrador_Producto.js";
 
 export const Administrador=sequelize.define("Administrador",{
     id:{
@@ -27,13 +25,8 @@ export const Administrador=sequelize.define("Administrador",{
     foto:{
         type:DataTypes.STRING
     }
+},{
+    freezeTableName:true
 })
 
 
-Administrador.belongsToMany(Producto,{
-    through:Administrador_Producto
-})
-
-Producto.belongsToMany(Administrador,{
-    through:Administrador_Producto
-})
