@@ -61,6 +61,54 @@ app.post('/insertar-administrador',async(req,res)=>{
 
 
 
+app.post('/iniciar-sesion',async(req,res)=>{
+  const {correo,contrasena}=req.body;
+
+  if(!correo || !contrasena){
+    return res.status(404).json({res:false,mensaje:"Llena todos los campos"})
+  }
+
+  const usuario=await Proveedor.findOne({where:{correo,contrasena}})
+
+
+  if(usuario){
+    return res.status(200).json({res:true,mensaje:"Inicio de sesion exitoso",usuario:usuario})
+  }
+
+  const admin=await Proveedor.findOne({where:{correo,contrasena}})
+
+  if(!admin){
+    return res.status(404).json({res:false,mensaje:"No se encontro usuario"})
+  }
+
+  return res.status(200).json({res:true,mensaje:"Inicio de sesion exitoso",usuario:usuario})
+})
+
+
+app.post('/cambiar-contrasena', async (req, res) => {
+  const { correo, contrasena } = req.body;
+
+  if (!correo || !contrasena) {
+    return res.status(400).json({ res: false, mensaje: "Llena todos los campos" });
+  }
+
+  const proveedorUpdate = await Proveedor.update({ contrasena }, { where: { correo } });
+
+  if (proveedorUpdate[0] > 0) {
+    return res.status(200).json({ res: true, mensaje: "Contraseña de proveedor actualizada" });
+  }
+
+  const adminUpdate = await Administrador.update({ contrasena }, { where: { correo } });
+
+  if (adminUpdate[0] > 0) {
+    return res.status(200).json({ res: true, mensaje: "Contraseña de administrador actualizada" });
+  }
+
+  return res.status(404).json({ res: false, mensaje: "No se encontró usuario con ese correo" });
+});
+
+
+
 app.post('/crear-producto',async(req,res)=>{
   const{descripcion,cantidad,imagen,precio,tipo,proveedorID} =req.body
 
