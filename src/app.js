@@ -261,13 +261,13 @@ app.post('/comprar-producto',async(req,res)=>{
 
 
 app.post('/realizar-solicitud',async(req,res)=>{
-  const {descripcion,fecha_solicitud,fecha_envio,imagen,AdministradorId,ProveedorId}=req.body;
+  const {descripcion,fecha_solicitud,fecha_envio,imagen,cantidad,AdministradorId,ProveedorId}=req.body;
 
-  if(!descripcion || !fecha_solicitud || !fecha_envio || !imagen || !AdministradorId || !ProveedorId){
+  if(!descripcion || !fecha_solicitud || !cantidad || !fecha_envio || !imagen || !AdministradorId || !ProveedorId){
     return res.status(404).json({res:false,mensaje:"Llena todos los campos"})
   }
 
-  const solicitud=await Solicitud.create({descripcion,fecha_solicitud,fecha_envio,imagen,AdministradorId,ProveedorId,atendido:false});
+  const solicitud=await Solicitud.create({descripcion,cantidad,fecha_solicitud,fecha_envio,imagen,AdministradorId,ProveedorId,atendido:false});
 
   return res.status(200).json({res:true,mensaje:"Solicitud enviada",solicitud:solicitud})
 
@@ -308,8 +308,8 @@ app.put('/atender-solicitud',async(req,res)=>{
 })
 
 
-app.get('/productos-estadisticas/:proveedorID/:order', async (req, res) => {
-  const { proveedorID, order } = req.params;
+app.get('/productos-estadisticas/:proveedorID', async (req, res) => {
+  const { proveedorID } = req.params;
 
   const productos = await Producto.findAll({ where: { proveedorID } });
 
@@ -320,34 +320,70 @@ app.get('/productos-estadisticas/:proveedorID/:order', async (req, res) => {
   const ids = productos.map(producto => producto.id);
 
   const resultado = await Administrador_Producto.findAll({
-    where: {
-      ProductoId: ids
-    }
+    where: { ProductoId: ids }
   });
 
-  const conteoProductos = {};
+  const sumaPrecios = {};
+  const sumaCantidades = {};
+
   resultado.forEach(item => {
-    conteoProductos[item.ProductoId] = (conteoProductos[item.ProductoId] || 0) + 1;
+    sumaPrecios[item.ProductoId] = (sumaPrecios[item.ProductoId] || 0) + item.precio_total;
+    sumaCantidades[item.ProductoId] = (sumaCantidades[item.ProductoId] || 0) + item.cantidadcomprada;
   });
 
-  const resultadoUnico = new Map();
-  resultado.forEach(item => {
-    if (!resultadoUnico.has(item.ProductoId)) {
-      resultadoUnico.set(item.ProductoId, item);
-    }
+  const productosCompletos = await Producto.findAll({
+    where: { id: Array.from(Object.keys(sumaPrecios)) }
   });
 
-  const resultadoOrdenado = Array.from(resultadoUnico.values()).sort((a, b) => {
-    if (order === '1') {
-      return conteoProductos[b.ProductoId] - conteoProductos[a.ProductoId];  
-    } else if (order === '0') {
-      return conteoProductos[a.ProductoId] - conteoProductos[b.ProductoId];  
-    }
-    return conteoProductos[b.ProductoId] - conteoProductos[a.ProductoId];
+  const productosMap = new Map();
+  productosCompletos.forEach(producto => {
+    productosMap.set(producto.id, producto);
   });
 
-  return res.send({res:true,mensaje:"Productos ordenados", resultado: resultadoOrdenado });
+  const resultadoFinal = Object.keys(sumaPrecios).map(id => {
+    const producto = productosMap.get(Number(id)); 
+    return {
+      ProductoId: Number(id), 
+      precio_total: sumaPrecios[id],  
+      cantidadcomprada: sumaCantidades[id],  
+      Producto: {
+        id: producto.id,
+        imagen: producto.imagen,
+        descripcion: producto.descripcion,
+      }
+    };
+  });
+
+  const resultadoOrdenado = resultadoFinal.sort((a, b) => b.cantidadcomprada - a.cantidadcomprada);
+
+  return res.send({ res: true, mensaje: "Productos ordenados por cantidad comprada", resultado: resultadoOrdenado });
 });
+
+
+
+
+
+app.get('/productos-bajostock/:proveedorID', async (req, res) => {
+  const { proveedorID } = req.params;
+
+  try {
+    const productos = await Producto.findAll({
+      where: { proveedorID },
+      order: [['cantidad', 'ASC']], 
+    });
+
+    if (productos.length === 0) {
+      return res.status(400).json({ res: false, mensaje: "No hay productos" });
+    }
+
+    return res.json({ res: true, mensaje:"Productos obtenidos",productos });
+
+  } catch (error) {
+    return res.status(500).json({ res: false, mensaje: "Error en el servidor", error: error.message });
+  }
+});
+
+
 
 
 

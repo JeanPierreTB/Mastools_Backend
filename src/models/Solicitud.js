@@ -23,6 +23,9 @@ export const Solicitud=sequelize.define("Solicitud",{
     imagen:{
         type:DataTypes.STRING
     },
+    cantidad:{
+        type:DataTypes.INTEGER
+    },
     atendido:{
         type:DataTypes.BOOLEAN
     }
