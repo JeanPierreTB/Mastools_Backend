@@ -1,11 +1,11 @@
 import express from 'express'; 
+import cors from 'cors';
 import { sequelize } from './database/database.js';
 import { Proveedor } from './models/Proveedor.js';
 import { Administrador } from './models/Administrador.js';
 import { Producto } from './models/Producto.js';
 import { Administrador_Producto } from './models/Administrador_Producto.js';
 import { Solicitud } from './models/Solicitud.js';
-
 
 
 const app = express();
@@ -24,6 +24,10 @@ const verificarconexion = async () => {
 };
 
 app.use(express.json());
+
+app.use(cors({
+  origin:'http://localhost:3000'
+}))
 
 app.get('/', (req, res) => {
     res.send('Servidor de Mastools');
@@ -294,15 +298,8 @@ app.get('/productos-estadisticas/:proveedorID/:order', async (req, res) => {
     return conteoProductos[b.ProductoId] - conteoProductos[a.ProductoId];
   });
 
-  return res.send({ resultado: resultadoOrdenado });
+  return res.send({res:true,mensaje:"Productos ordenados", resultado: resultadoOrdenado });
 });
-
-
-
-
-
-
-
 
 
 
