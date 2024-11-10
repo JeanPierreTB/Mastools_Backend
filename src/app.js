@@ -108,6 +108,22 @@ app.post('/cambiar-contrasena', async (req, res) => {
 });
 
 
+app.get('/obtener-datos/:id',async(req,res)=>{
+  const {id}=req.params;
+
+  const usuario=await Proveedor.findOne({where:{id}})
+
+  if(!usuario){
+    return res.status(400).json({ res: false, mensaje: "Usuario no existe" });
+
+  }
+
+  return res.status(200).json({ res: true, mensaje: "Datos obtenidos",usuario:usuario });
+
+
+})
+
+
 
 app.post('/crear-producto',async(req,res)=>{
   const{descripcion,cantidad,imagen,precio,tipo,proveedorID} =req.body
@@ -275,23 +291,31 @@ app.post('/realizar-solicitud',async(req,res)=>{
 })
 
 
-app.get('/visualizar-solicitudes/:ProveedorId',async(req,res)=>{
-  const {ProveedorId}=req.params;
+app.get('/visualizar-solicitudes/:ProveedorId', async (req, res) => {
+  const { ProveedorId } = req.params;
 
-  if(!ProveedorId){
-    return res.status(404).send({res:false,mensaje:"Llena los campos"})
+  if (!ProveedorId) {
+    return res.status(404).send({ res: false, mensaje: "Llena los campos" });
   }
 
-  const solicitud=await Solicitud.findAll({where:{ProveedorId,atendido:false}})
+  const today = new Date();
 
-  if(solicitud.length===0){
-    return res.status(404).send({res:false,mensaje:'No hay solicitudes'})
+  const solicitudes = await Solicitud.findAll({
+    where: { 
+      ProveedorId,
+      atendido: false
+    },
+    order: [
+      ['fecha_envio', 'ASC']  
+    ]
+  });
+
+  if (solicitudes.length === 0) {
+    return res.status(404).send({ res: false, mensaje: 'No hay solicitudes' });
   }
 
-  return res.status(200).send({res:true,mensaje:'Solicitudes',solicitud:solicitud})
-
-
-})
+  return res.status(200).send({ res: true, mensaje: 'Solicitudes', solicitud: solicitudes });
+});
 
 
 app.put('/atender-solicitud',async(req,res)=>{
