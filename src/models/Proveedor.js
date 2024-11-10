@@ -25,7 +25,7 @@ export const Proveedor=sequelize.define("Proveedor",{
         type:DataTypes.INTEGER
     },
     foto:{
-        type:DataTypes.STRING
+        type:DataTypes.TEXT
     }
 },{
     freezeTableName:true

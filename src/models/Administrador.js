@@ -23,7 +23,7 @@ export const Administrador=sequelize.define("Administrador",{
         type:DataTypes.INTEGER
     },
     foto:{
-        type:DataTypes.STRING
+        type:DataTypes.TEXT
     }
 },{
     freezeTableName:true

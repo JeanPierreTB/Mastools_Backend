@@ -175,13 +175,13 @@ app.get('/obtener-productos/:id',async (req,res)=>{
 
 
 app.put('/actualizar-proveedor',async(req,res)=>{
-  const { id,nombre, apellido, correo, contrasena, dni } = req.body;
+  const { id,nombre, apellido, correo, contrasena, dni ,foto} = req.body;
 
-  if (!id || !nombre || !apellido || !correo || !contrasena || !dni) {
+  if (!id || !nombre || !apellido || !correo || !contrasena || !dni ) {
     return res.status(400).json({ res: false, mensaje: "Llena todos los campos" });
   }
 
-  const [proveedor]=await Proveedor.update({nombre,apellido,correo,contrasena,dni},{where:{id}})
+  const [proveedor]=await Proveedor.update({nombre,apellido,correo,contrasena,dni,foto},{where:{id}})
 
   if(proveedor===0){
     return res.status(400).json({res:false,mensaje:"Ningun proveedor encontrado"})
