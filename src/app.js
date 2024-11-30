@@ -72,16 +72,16 @@ app.post('/iniciar-sesion',async(req,res)=>{
 
 
   if(usuario){
-    return res.status(200).json({res:true,mensaje:"Inicio de sesion exitoso",usuario:usuario})
+    return res.status(200).json({res:true,mensaje:"Inicio de sesion exitoso",usuario:usuario, rol: 0})
   }
 
-  const admin=await Proveedor.findOne({where:{correo,contrasena}})
+  const admin=await Administrador.findOne({where:{correo,contrasena}})
 
   if(!admin){
     return res.status(404).json({res:false,mensaje:"No se encontro usuario"})
   }
 
-  return res.status(200).json({res:true,mensaje:"Inicio de sesion exitoso",usuario:usuario})
+  return res.status(200).json({res:true,mensaje:"Inicio de sesion exitoso",usuario:admin, rol: 1})
 })
 
 
@@ -108,7 +108,7 @@ app.post('/cambiar-contrasena', async (req, res) => {
 });
 
 
-app.get('/obtener-datos/:id',async(req,res)=>{
+app.get('/obtener-datos-proveedor/:id',async(req,res)=>{
   const {id}=req.params;
 
   const usuario=await Proveedor.findOne({where:{id}})
@@ -118,11 +118,25 @@ app.get('/obtener-datos/:id',async(req,res)=>{
 
   }
 
-  return res.status(200).json({ res: true, mensaje: "Datos obtenidos",usuario:usuario });
+  return res.status(200).json({ res: true, mensaje: "Proveedor obtenidos",usuario:usuario });
 
 
 })
 
+app.get('/obtener-datos-administrador/:id',async(req,res)=>{
+  const {id}=req.params;
+
+  const usuario=await Administrador.findOne({where:{id}})
+
+  if(!usuario){
+    return res.status(400).json({ res: false, mensaje: "Administrador no existe" });
+
+  }
+
+  return res.status(200).json({ res: true, mensaje: "Administrador obtenidos",usuario:usuario });
+
+
+})
 
 
 app.post('/crear-producto',async(req,res)=>{
@@ -192,6 +206,23 @@ app.put('/actualizar-proveedor',async(req,res)=>{
 
 })
 
+app.put('/actualizar-administrador',async(req,res)=>{
+  const { id,nombre, apellido, correo, contrasena, dni ,foto} = req.body;
+
+  if (!id || !nombre || !apellido || !correo || !contrasena || !dni ) {
+    return res.status(400).json({ res: false, mensaje: "Llena todos los campos" });
+  }
+
+  const [administrador]=await Administrador.update({nombre,apellido,correo,contrasena,dni,foto},{where:{id}})
+
+  if(administrador===0){
+    return res.status(400).json({res:false,mensaje:"Ningun administrador encontrado"})
+
+  }
+
+  return res.status(200).json({res:true,mensaje:"Se actualizo el administradors"})
+
+})
 
 app.put('/actualizar-producto',async (req,res)=>{
   const {id,descripcion,cantidad,imagen,precio,tipo,proveedorID}=req.body;
@@ -340,9 +371,10 @@ app.get('/productos-estadisticas/:proveedorID', async (req, res) => {
   if (productos.length === 0) {
     return res.status(400).json({ res: false, mensaje: "No hay productos" });
   }
-
+  
   const ids = productos.map(producto => producto.id);
-
+  
+   
   const resultado = await Administrador_Producto.findAll({
     where: { ProductoId: ids }
   });
@@ -381,6 +413,9 @@ app.get('/productos-estadisticas/:proveedorID', async (req, res) => {
   const resultadoOrdenado = resultadoFinal.sort((a, b) => b.cantidadcomprada - a.cantidadcomprada);
 
   return res.send({ res: true, mensaje: "Productos ordenados por cantidad comprada", resultado: resultadoOrdenado });
+
+  
+
 });
 
 
