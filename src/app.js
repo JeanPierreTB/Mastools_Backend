@@ -6,6 +6,7 @@ import { Administrador } from './models/Administrador.js';
 import { Producto } from './models/Producto.js';
 import { Administrador_Producto } from './models/Administrador_Producto.js';
 import { Solicitud } from './models/Solicitud.js';
+import { Op, where } from 'sequelize';
 
 
 const app = express();
@@ -184,7 +185,19 @@ app.get('/obtener-productos/:id',async (req,res)=>{
     return res.status(404).json({res:false,mensaje:"Nos se encontraron productos"})
   }
 
-  res.status(200).json({res:true,mensaje:"Productos encontrados",productos,productos})
+  res.status(200).json({res:true,mensaje:"Productos encontrados",productos:productos})
+})
+
+
+app.get('/obtener-productos-disponibles',async(req,res)=>{
+  const productos=await Producto.findAll({where:{cantidad:{[Op.gt]:0}}});
+
+  if(productos.length===0){
+    return res.status(404).json({res:false,mensaje:"Nos se encontraron productos"})
+
+  }
+
+  return res.status(200).json({res:true,mensaje:"Se encontraron productos",productos:productos})
 })
 
 
