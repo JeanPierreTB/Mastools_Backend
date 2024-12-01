@@ -21,7 +21,7 @@ export const Solicitud=sequelize.define("Solicitud",{
         type:DataTypes.DATEONLY
     },
     imagen:{
-        type:DataTypes.STRING
+        type:DataTypes.TEXT
     },
     cantidad:{
         type:DataTypes.INTEGER

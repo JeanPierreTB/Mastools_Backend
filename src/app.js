@@ -17,14 +17,17 @@ const PORT = process.env.PORT || 3001;
 const verificarconexion = async () => {
     try {
       await sequelize.authenticate();
-      await sequelize.sync();
+      
       console.log("Conexion a base de datos exitosa");
+
+       await sequelize.models.Solicitud.sync({ force: true });
+       console.log("Tabla eliminada y recreada exitosamente");
     } catch (e) {
       console.error("No se logró conectar ", e);
     }
 };
 
-app.use(express.json());
+app.use(express.json({limit:'100mb'}));
 
 app.use(cors({
   origin:'http://localhost:3000'
@@ -331,6 +334,18 @@ app.post('/realizar-solicitud',async(req,res)=>{
 
   return res.status(200).json({res:true,mensaje:"Solicitud enviada",solicitud:solicitud})
 
+
+})
+
+app.get('/lista-proveedores',async(req,res)=>{
+  const proveedores=await Proveedor.findAll({});
+
+  if(proveedores.length===0){
+    return res.status(404).json({res:false,mensaje:"No hay proveedores"})
+
+  }
+
+  return res.status(200).json({res:true,mensaje:"Proveedores encontrados",proveedores:proveedores})
 
 })
 
